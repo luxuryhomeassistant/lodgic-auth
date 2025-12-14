@@ -31,6 +31,40 @@ app.post("/hash", async (req, res) => {
   }
 });
 
+app.post("/verify", async (req, res) => {
+  try {
+    const key = req.header("x-lodgic-key");
+    if (!API_KEY || !key || key !== API_KEY) {
+      return res.status(401).json({ ok: false, error: "UNAUTHORIZED" });
+    }
+
+    const { password, hash } = req.body || {};
+
+    if (
+      !password ||
+      !hash ||
+      typeof password !== "string" ||
+      typeof hash !== "string"
+    ) {
+      return res.status(400).json({
+        ok: false,
+        error: "INVALID_INPUT"
+      });
+    }
+
+    const valid = await bcrypt.compare(password, hash);
+
+    return res.json({
+      ok: valid
+    });
+  } catch (e) {
+    return res.status(500).json({
+      ok: false,
+      error: "VERIFY_FAILED"
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`[lodgic-auth] listening on port ${PORT}`);
 });
